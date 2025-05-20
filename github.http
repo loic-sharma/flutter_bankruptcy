@@ -1,0 +1,48 @@
+### Get recently closed issues with an associated pull request
+
+POST https://api.github.com/graphql
+Accept: application/vnd.github+json
+Authorization: Bearer ghp_ABC1234
+X-Request-Type: GraphQL
+
+query RecentlyClosedIssuesWithPR($owner: String!, $repository: String!, $after: String) {
+  repository(owner: $owner, name: $repository) {
+    issues(
+      first: 20,
+      after: $after,
+      states: CLOSED,
+      orderBy: { field: UPDATED_AT, direction: DESC }
+    ) {
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+      edges {
+        node {
+          url
+          title
+          createdAt
+          closedAt
+          timelineItems(itemTypes: [CONNECTED_EVENT, CROSS_REFERENCED_EVENT], first: 1) {
+            nodes {
+              ... on ConnectedEvent {
+                subject {
+                  ... on PullRequest {
+                    url
+                  }
+                }
+              }
+              ... on CrossReferencedEvent {
+                source {
+                  ... on PullRequest {
+                    url
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
