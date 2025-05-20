@@ -102,7 +102,7 @@ Future<T> _runQuery<T>({
 
 const _issuesQuery =
 '''
-query RecentlyClosedIssuesWithPR(\$owner: String!, \$repository: String!, \$after: String) {
+query RecentlyUpdatedClosedIssuesWithPR(\$owner: String!, \$repository: String!, \$after: String) {
   repository(owner: \$owner, name: \$repository) {
     issues(
       first: 20,

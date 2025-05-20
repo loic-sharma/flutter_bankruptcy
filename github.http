@@ -1,11 +1,11 @@
-### Get recently closed issues with an associated pull request
+### Get recently updated closed issues with an associated pull request
 
 POST https://api.github.com/graphql
 Accept: application/vnd.github+json
 Authorization: Bearer ghp_ABC1234
 X-Request-Type: GraphQL
 
-query RecentlyClosedIssuesWithPR($owner: String!, $repository: String!, $after: String) {
+query RecentlyUpdatedClosedIssuesWithPR($owner: String!, $repository: String!, $after: String) {
   repository(owner: $owner, name: $repository) {
     issues(
       first: 20,
