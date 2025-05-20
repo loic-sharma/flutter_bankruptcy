@@ -2,10 +2,10 @@ Results:
 
 Category | count
 -- | --
-Recently closed issues with no associated PRs where the issue was open for less than 3 years | 1439
-Recently closed issues with no associated PRs where the issue was open for 3 or more years | 103
-Recently closed issues with an associated PR where the issue was open for less than 3 years | 430
-Recently closed issues with an associated PR where the issue was open for 3 or more eyars | 28
+Last updated closed issues with no associated PRs where the issue was open for less than 3 years | 1439
+Last updated closed issues with no associated PRs where the issue was open for 3 or more years | 103
+Last updated closed issues with an associated PR where the issue was open for less than 3 years | 430
+Last updated closed issues with an associated PR where the issue was open for 3 or more years | 28
 
 1. Download latest commits:
 
@@ -16,7 +16,7 @@ Recently closed issues with an associated PR where the issue was open for 3 or m
 
 2. Open duckdb: `duckdb -ui`
 
-3. Find how many recently closed issues had associated PRs and were open for at least 3 years
+3. Find how many closed issues had associated PRs and were open for at least 3 years
 
    ```sql
    WITH foo AS (
