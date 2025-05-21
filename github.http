@@ -23,12 +23,13 @@ query RecentlyUpdatedClosedIssuesWithPR($owner: String!, $repository: String!, $
           title
           createdAt
           closedAt
-          timelineItems(itemTypes: [CONNECTED_EVENT, CROSS_REFERENCED_EVENT], first: 1) {
+          timelineItems(itemTypes: [CONNECTED_EVENT, CROSS_REFERENCED_EVENT], first: 5) {
             nodes {
               ... on ConnectedEvent {
                 subject {
                   ... on PullRequest {
                     url
+                    state
                   }
                 }
               }
@@ -36,6 +37,7 @@ query RecentlyUpdatedClosedIssuesWithPR($owner: String!, $repository: String!, $
                 source {
                   ... on PullRequest {
                     url
+                    state
                   }
                 }
               }

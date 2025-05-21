@@ -17,6 +17,11 @@ void main(List<String> arguments) async {
     for (final issue in response.issues) {
       final openDuration = issue.closedAt.difference(issue.createdAt);
 
+      // Ignore closed or open pull requests.
+      var hasAssociatedPullRequest = issue
+        .associatedPullRequests
+        .any((pr) => pr.state == PullRequestState.merged);
+
       outputFile.write(issue.url);
       outputFile.write(',');
       outputFile.write(issue.createdAt.toUtc().toIso8601String());
@@ -25,7 +30,7 @@ void main(List<String> arguments) async {
       outputFile.write(',');
       outputFile.write(openDuration.inDays);
       outputFile.write(',');
-      outputFile.write(issue.associatedPullRequest != null ? 'true' : 'false');
+      outputFile.write(hasAssociatedPullRequest);
       outputFile.writeln();
     }
 
@@ -59,7 +64,17 @@ Future<Issues> loadIssues(
         'after': after,
       },
     }),
-    resultCallback: Issues.fromJson,
+    resultCallback: (json) {
+      try {
+        return Issues.fromJson(json);
+      } catch (e) {
+        print('Error parsing issue JSON:');
+        print('');
+        print(json);
+        print('');
+        rethrow;
+      }
+    },
   );
 }
 
@@ -124,6 +139,7 @@ query RecentlyUpdatedClosedIssuesWithPR(\$owner: String!, \$repository: String!,
                 subject {
                   ... on PullRequest {
                     url
+                    state
                   }
                 }
               }
@@ -131,6 +147,7 @@ query RecentlyUpdatedClosedIssuesWithPR(\$owner: String!, \$repository: String!,
                 source {
                   ... on PullRequest {
                     url
+                    state
                   }
                 }
               }
@@ -174,26 +191,66 @@ class Issue {
     required this.url, 
     required this.createdAt, 
     required this.closedAt, 
-    required this.associatedPullRequest
+    required this.associatedPullRequests,
   });
 
   final String title;
   final Uri url;
   final DateTime createdAt;
   final DateTime closedAt;
-  final Uri? associatedPullRequest;
+  final List<AssociatedPullRequest> associatedPullRequests;
 
   factory Issue.fromJson(Map<String, dynamic> json) {
     final nodes = json['timelineItems']['nodes'] as List<dynamic>;
-    final node = nodes.firstOrNull as Map<String, dynamic>?;
-    final associatedPullRequest = node?['source']?['url'];
+
+    final associatedPullRequests = <AssociatedPullRequest>[
+      for (final node in nodes)
+        ?AssociatedPullRequest.fromJson(node as Map<String, dynamic>),
+    ];
 
     return Issue(
       title: json['title'] as String,
       url: Uri.parse(json['url'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       closedAt: DateTime.parse(json['closedAt'] as String),
-      associatedPullRequest: associatedPullRequest != null ? Uri.parse(associatedPullRequest) : null,
+      associatedPullRequests: associatedPullRequests,
     );
+  }
+}
+
+class AssociatedPullRequest {
+  AssociatedPullRequest({required this.url, required this.state});
+
+  final Uri url;
+  final PullRequestState state;
+
+  static AssociatedPullRequest? fromJson(Map<String, dynamic> json) {
+    final node = json['source'] as Map<String, dynamic>?
+      ?? json['subject'] as Map<String, dynamic>;
+
+    if (node.isEmpty) {
+      return null;
+    }
+
+    return AssociatedPullRequest(
+      url: Uri.parse(node['url'] as String),
+      state: PullRequestState.fromString(node['state'] as String),
+    );
+  }
+}
+
+enum PullRequestState {
+  open,
+  closed,
+  merged,
+  unknown;
+
+  static PullRequestState fromString(String value) {
+    return switch (value) {
+      'OPEN' => PullRequestState.open,
+      'CLOSED' => PullRequestState.closed,
+      'MERGED' => PullRequestState.merged,
+      _ => PullRequestState.unknown,
+    };
   }
 }
